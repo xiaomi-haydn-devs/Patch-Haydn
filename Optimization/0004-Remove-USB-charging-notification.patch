@@ -1,19 +1,51 @@
-From 085d6099000257d3489a1a44e12e446f2998aa2c Mon Sep 17 00:00:00 2001
-From: tejasvp25 <tejasvp25@gmail.com>
-Date: Sun, 19 Nov 2023 18:39:29 +0530
-Subject: [PATCH] Charger: Fixup notification
+From 586591d4d61976154406b32b9999d7054c2a6e94 Mon Sep 17 00:00:00 2001
+From: Pranav Vashi <neobuddy89@gmail.com>
+Date: Mon, 27 Nov 2023 19:04:25 +0530
+Subject: [PATCH] Revert "Show charging notification when device is being
+ charged via USB, with USB data disabled."
 
-Signed-off-by: tejasvp25 <tejasvp25@gmail.com>
-Signed-off-by: Dmitrii <bankersenator@gmail.com>
+* Some devices show up USB options when connecting wall charger. This commit
+  doesn't pass the test it mentioned. Revert till google fixes properly.
+
+This reverts commit a13e37793f52acf56f1106cd7db8157e7c13ad76.
 ---
- .../usb/java/com/android/server/usb/UsbDeviceManager.java | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ .../com/android/server/usb/UsbDeviceManager.java  | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
 diff --git a/services/usb/java/com/android/server/usb/UsbDeviceManager.java b/services/usb/java/com/android/server/usb/UsbDeviceManager.java
-index a8569818f6f5..1a216aa16cf7 100644
+index a8569818f6f5..6dcf419945da 100644
 --- a/services/usb/java/com/android/server/usb/UsbDeviceManager.java
 +++ b/services/usb/java/com/android/server/usb/UsbDeviceManager.java
-@@ -1375,13 +1375,7 @@ protected void updateUsbNotification(boolean force) {
+@@ -537,8 +537,6 @@ abstract static class UsbHandler extends Handler {
+         private boolean mSinkPower;
+         private boolean mAudioAccessoryConnected;
+         private boolean mAudioAccessorySupported;
+-        private boolean mConnectedToDataDisabledPort;
+-        private int mPowerBrickConnectionStatus;
+ 
+         private UsbAccessory mCurrentAccessory;
+         private int mUsbNotificationId;
+@@ -1041,19 +1039,12 @@ public void handleMessage(Message msg) {
+                                 && status.isRoleCombinationSupported(POWER_ROLE_SOURCE,
+                                 DATA_ROLE_DEVICE)
+                                 && status.isRoleCombinationSupported(POWER_ROLE_SINK, DATA_ROLE_DEVICE);
+-
+-                        boolean usbDataDisabled =
+-                                status.getUsbDataStatus() != UsbPortStatus.DATA_STATUS_ENABLED;
+-                        mConnectedToDataDisabledPort = status.isConnected() && usbDataDisabled;
+-                        mPowerBrickConnectionStatus = status.getPowerBrickConnectionStatus();
+                     } else {
+                         mHostConnected = false;
+                         mSourcePower = false;
+                         mSinkPower = false;
+                         mAudioAccessoryConnected = false;
+                         mSupportsAllCombinations = false;
+-                        mConnectedToDataDisabledPort = false;
+-                        mPowerBrickConnectionStatus = UsbPortStatus.POWER_BRICK_STATUS_UNKNOWN;
+                     }
+ 
+                     if (mHostConnected) {
+@@ -1375,12 +1366,6 @@ protected void updateUsbNotification(boolean force) {
              } else if (mHostConnected && mSinkPower && (mUsbCharging || mUsbAccessoryConnected)) {
                  titleRes = com.android.internal.R.string.usb_charging_notification_title;
                  id = SystemMessage.NOTE_USB_CHARGING;
@@ -23,8 +55,6 @@ index a8569818f6f5..1a216aa16cf7 100644
 -                // connected to a wall charger.
 -                titleRes = com.android.internal.R.string.usb_charging_notification_title;
 -                id = SystemMessage.NOTE_USB_CHARGING;
--            }
-+            } 
+             }
              if (id != mUsbNotificationId || force) {
                  // clear notification if title needs changing
-                 if (mUsbNotificationId != 0) {
