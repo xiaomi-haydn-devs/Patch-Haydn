@@ -1,14 +1,14 @@
-From 1d9d4b2a7dc314be0cd6477ea58d2af5f55af001 Mon Sep 17 00:00:00 2001
+From 05dfdb155646945ce5b5b8223d3c669751536c3a Mon Sep 17 00:00:00 2001
 From: hydrangea07 <hydrangea07@users.noreply.github.com>
-Date: Sun, 27 Aug 2023 08:55:11 +0800
+Date: Wed, 27 Dec 2023 19:48:22 +0300
 Subject: [PATCH] init.rc: Tune F2FS and dirty writeout policy for modern
  devices
 
-In a previous commit bb0838b5114419b4f8ecff67c0b6fb728399c7b7, the gc_urgent_sleep_time for F2FS was aggressively set to 50ms to optimize GC.
+In a previous commit bb0838b, the gc_urgent_sleep_time for F2FS was aggressively set to 50ms to optimize GC.
 This change, however, led to performance regressions on most devices, particularly of those running in 4.19+ kernels.
 From our tests, the heightened CPU and I/O activity from this aggressive garbage collection setting is the likely cause.
 To address this, we're revising the gc_urgent_sleep_time parameter to strike a balance between aggressive GC and device performance, taking
-bb0838b5114419b4f8ecff67c0b6fb728399c7b7 goal into consideration.
+bb0838b goal into consideration.
 Furthermore, the dirty writeout policy has been aligned with the latest configurations used in Pixel devices,
 and cp_interval has been adjusted to surpass dirty_expire_centisecs for improved power efficiency during idle times.
 
@@ -20,7 +20,7 @@ Signed-off-by: minaripenguin <minaripenguin@users.noreply.github.com>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/rootdir/init.rc b/rootdir/init.rc
-index f29c07bb15af..6c4685d2a962 100644
+index f29c07bb15af..f7e88445d46a 100644
 --- a/rootdir/init.rc
 +++ b/rootdir/init.rc
 @@ -1136,10 +1136,12 @@ on boot
@@ -34,7 +34,7 @@ index f29c07bb15af..6c4685d2a962 100644
      write /dev/sys/fs/by-name/userdata/iostat_period_ms 1000
      write /dev/sys/fs/by-name/userdata/iostat_enable 0
 +    write /proc/sys/vm/dirty_expire_centisecs 3000
-+    write /proc/sys/vm/dirty_background_ratio  10
++    write /proc/sys/vm/dirty_background_ratio 10
  
      # set readahead multiplier for POSIX_FADV_SEQUENTIAL files
      write /dev/sys/fs/by-name/userdata/seq_file_ra_mul 16
