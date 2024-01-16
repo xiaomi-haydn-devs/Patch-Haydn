@@ -1,0 +1,98 @@
+From b39fa25335556d0d50ccab80e644787dbbaf79d7 Mon Sep 17 00:00:00 2001
+From: Astridxx <muratkozan350@gmail.com>
+Date: Sun, 15 Oct 2023 11:42:04 +0300
+Subject: [PATCH] Add audio-app support
+
+---
+ libprocessgroup/sched_policy.cpp |  4 +++-
+ rootdir/init.rc                  | 11 +++++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/libprocessgroup/sched_policy.cpp b/libprocessgroup/sched_policy.cpp
+index 169b1d3e0ac3..fd6c10fa904a 100644
+--- a/libprocessgroup/sched_policy.cpp
++++ b/libprocessgroup/sched_policy.cpp
+@@ -50,7 +50,7 @@ int set_cpuset_policy(int tid, SchedPolicy policy) {
+         case SP_FOREGROUND:
+         case SP_AUDIO_APP:
+         case SP_AUDIO_SYS:
+-            return SetTaskProfiles(tid, {"CPUSET_SP_FOREGROUND"}, true) ? 0 : -1;
++            return SetTaskProfiles(tid, {"CPUSET_SP_FOREGROUND", "AudioAppCapacity"}, true) ? 0 : -1;
+         case SP_TOP_APP:
+             return SetTaskProfiles(tid, {"CPUSET_SP_TOP_APP"}, true) ? 0 : -1;
+         case SP_SYSTEM:
+@@ -178,6 +178,8 @@ static int get_sched_policy_from_group(const std::string& group, SchedPolicy* po
+         *policy = SP_TOP_APP;
+     } else if (group == "restricted") {
+         *policy = SP_RESTRICTED;
++    } else if (group == "audio-app") {
++        *policy = SP_AUDIO_APP;
+     } else {
+         errno = ERANGE;
+         return -1;
+diff --git a/rootdir/init.rc b/rootdir/init.rc
+index e7a4d0efe232..4b2ae2a4a3c0 100644
+--- a/rootdir/init.rc
++++ b/rootdir/init.rc
+@@ -110,16 +110,19 @@ on init
+     mkdir /dev/stune/background
+     mkdir /dev/stune/top-app
+     mkdir /dev/stune/rt
++    mkdir /dev/stune/audio-app
+     chown system system /dev/stune
+     chown system system /dev/stune/foreground
+     chown system system /dev/stune/background
+     chown system system /dev/stune/top-app
+     chown system system /dev/stune/rt
++    chown system system /dev/stune/audio-app
+     chown system system /dev/stune/tasks
+     chown system system /dev/stune/foreground/tasks
+     chown system system /dev/stune/background/tasks
+     chown system system /dev/stune/top-app/tasks
+     chown system system /dev/stune/rt/tasks
++    chown system system /dev/stune/audio-app/tasks
+     chown system system /dev/stune/cgroup.procs
+     chown system system /dev/stune/foreground/cgroup.procs
+     chown system system /dev/stune/background/cgroup.procs
+@@ -135,6 +138,7 @@ on init
+     chmod 0664 /dev/stune/background/cgroup.procs
+     chmod 0664 /dev/stune/top-app/cgroup.procs
+     chmod 0664 /dev/stune/rt/cgroup.procs
++    chmod 0664 /dev/stune/audio-app/tasks
+ 
+     # cpuctl hierarchy for devices using utilclamp
+     mkdir /dev/cpuctl/foreground
+@@ -368,12 +372,17 @@ on init
+     copy /dev/cpuset/cpus /dev/cpuset/camera-daemon/cpus
+     copy /dev/cpuset/mems /dev/cpuset/camera-daemon/mems
+ 
++    mkdir /dev/cpuset/audio-app
++    copy /dev/cpuset/cpus /dev/cpuset/audio-app/cpus
++    copy /dev/cpuset/mems /dev/cpuset/audio-app/mems
++
+     # change permissions for all cpusets we'll touch at runtime
+     chown system system /dev/cpuset
+     chown system system /dev/cpuset/foreground
+     chown system system /dev/cpuset/background
+     chown system system /dev/cpuset/system-background
+     chown system system /dev/cpuset/top-app
++    chown system system /dev/cpuset/audio-app
+     chown system system /dev/cpuset/restricted
+     chown system system /dev/cpuset/camera-daemon
+     chown system system /dev/cpuset/tasks
+@@ -381,6 +390,7 @@ on init
+     chown system system /dev/cpuset/background/tasks
+     chown system system /dev/cpuset/system-background/tasks
+     chown system system /dev/cpuset/top-app/tasks
++    chown system system /dev/cpuset/audio-app/tasks
+     chown system system /dev/cpuset/restricted/tasks
+     chown system system /dev/cpuset/camera-daemon/tasks
+     chown system system /dev/cpuset/cgroup.procs
+@@ -398,6 +408,7 @@ on init
+     chmod 0664 /dev/cpuset/background/tasks
+     chmod 0664 /dev/cpuset/system-background/tasks
+     chmod 0664 /dev/cpuset/top-app/tasks
++    chmod 0664 /dev/cpuset/audio-app/tasks
+     chmod 0664 /dev/cpuset/restricted/tasks
+     chmod 0664 /dev/cpuset/tasks
+     chmod 0664 /dev/cpuset/camera-daemon/tasks
